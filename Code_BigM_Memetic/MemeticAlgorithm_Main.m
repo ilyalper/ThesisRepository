@@ -19,8 +19,8 @@ Set_of_M = [300,500]
 Set_of_M = [300]
 
 %0 means no mutation, 1 means 1-type mutation, 2 means 3-type mutation
-param_mutation_type= 0;
-param_mutation_probability=0.03; %mutasyona girme olasılığını da buradan giriyoruz
+param_mutation_type= 2;
+param_mutation_probability=0.01; %mutasyona girme olasılığını da buradan giriyoruz
 
 %0 means no NS, 1 means recursion is allowed, 2 means 2 iteration is allowed
 param_neighborsearchtype=0;
@@ -171,7 +171,7 @@ for iiii=1:length(N)
                             r=rand;
                             if r < param_mutation_probability
                                 %new_parent_feature_set(i,:) = mutation_trial(new_parent_feature_set(i,:),p,r,param_mutation_probability);
-                                current_population_feature_set(i,:) = mutation(current_population_feature_set(i,:),p);
+                                current_population_assignment_set(i,:) = mutation_type1(current_population_assignment_set(i,:),n);
                                 mutation_count=mutation_count+1;
                             end
                         end
@@ -179,7 +179,7 @@ for iiii=1:length(N)
                         for i=1:current_inhabitants
                             r=rand;
                             if r < param_mutation_probability
-                                current_population_feature_set(i,:) = mutation_trial(current_population_feature_set(i,:),p,r,param_mutation_probability);
+                                current_population_assignment_set(i,:) = mutation_type2(current_population_assignment_set(i,:),current_population_center_set(i,:),p,n);
                                 %new_parent_feature_set(i,:) = mutation(new_parent_feature_set(i,:),p);
                                 mutation_count=mutation_count+1;
                             end
