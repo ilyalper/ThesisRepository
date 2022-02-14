@@ -2,24 +2,21 @@ clear all
 clc
 
 % İlk olarak kullanacağımız data setini ve toplam featureların setini oluşturuyoruz
-% N or n data sayısı
-% orig_M or d toplam feature sayısını
-% p toplam cluster sayısını
+% N or n data sayısı    % orig_M or d toplam feature sayısını % p toplam cluster sayısını
 % q her cluster'da kullanılacak olan feature sayısını
-ga_summary=[];
+ga_summary=[]; ga_checkpoint_summary=[]; ga_checkpoint_towrite=[];
+%bestfitness_values=ones(50,100);
+
 p = 2; % number of clusters in each parent
 
 N=[80,100,200,500,1000]
-%N=[80,100,200]
 N=[100]
 
-bestfitness_values=ones(50,100);
-%
 Set_of_M = [300,500]
-Set_of_M = [300]
+Set_of_M = [300,500]
 
 %0 means no mutation, 1 means 1-type mutation, 2 means 3-type mutation
-param_mutation_type= 2;
+param_mutation_type= 1;
 param_mutation_probability=0.01; %mutasyona girme olasılığını da buradan giriyoruz
 
 %0 means no NS, 1 means recursion is allowed, 2 means 2 iteration is allowed
@@ -29,36 +26,31 @@ param_number_of_neighbors=10; % kontrol edilecek olan neighbor sayısına burada
 %0 means no NS_feature, 1 means yes NS_feature
 param_neighbor_feature_searchtype=0;
 
-
-
-
 %Her bir [m,p,q,n] seti için kaç repetition yapılacağını belirliyoruz
-ga_number_of_repetition=1000;
+ga_number_of_repetition=50;
 
-param_number_of_generations = 100;
+param_number_of_generations = 80;
+param_checkpoint_repetition = 20;
 
 %Initial population için ilk kırılımdaki oranları kümülatif olarak giriyoruz
 param_init_random_ratio=0.5;
 param_second_random_ratio = 0.75;
 param_third_random_ratio = 1;
 
-
 %Çıktılarımızı yazdıracağımız dokümanın adını baştan belirliyoruz.
 ga_filename = ['results_p', num2str(p),'_Mut',num2str(param_mutation_type), '_NS',num2str(param_neighborsearchtype),'.xlsx'];
-
-
 
 for iiii=1:length(N)
     n=N(iiii);
     % algoritma boyunca kullanılacak populasyon büyüklüğünü belirliyoruz
     % population size
     if n<250
-        param_population_size=500
+        param_population_size=500;
     else
-        param_population_size=n
+        param_population_size=n;
     end
     
-    param_population_size=1000;
+    param_population_size=1000
     
     for jjj=1:length(Set_of_M)
         orig_m=Set_of_M(jjj);
@@ -85,7 +77,7 @@ for iiii=1:length(N)
                 % generation of the Initial population
                 
                 parent_features=[];parent_centers=[];
-                
+                checkpoint_index=0;
                 % ilk önce initial population'un seçtiğimiz bir oranını
                 % random feature ve random center seçerek oluşturuyoruz.
                 
@@ -112,7 +104,6 @@ for iiii=1:length(N)
                     [init_rand_infeasibility_count,parent_assignments,parent_centers ] = random_init_center_assignment(p,d,q,n,data,init_rand_center_start,init_rand_center_end,parent_assignments,parent_centers);
                 end
                 
-                
                 % initial'da oluşan seti kontrol etmek için aşağıdaki iki satır kullanılabilir
                 %ga_initial_parent_features = parent_features;
                 %ga_initial_parent_centers = parent_centers;
@@ -125,7 +116,6 @@ for iiii=1:length(N)
                     current_population_assignment_set(i,:) = parent_assignments(i,:);
                     current_population_center_set(i,:) = parent_centers(i,:);
                 end
-                
                 %sorting
                 [ordering index] = sort(fitness_set,'ascend');
                 new_parent_assignment_set_temp = current_population_assignment_set(index,:);
@@ -161,7 +151,6 @@ for iiii=1:length(N)
                     % burada elimizdeki en iyi noktayı mutasyona sokmamak
                     % mantıklı olur mu?? yoksa randomnessta bir problem
                     % oluşturur mu
-                    
                     % mutation operation
                     mutation_count=0;
                     if param_mutation_type==0
@@ -185,14 +174,10 @@ for iiii=1:length(N)
                             end
                         end
                     end
-                    
                     %%% Mutation - end
                     
                     %% fitness calculation
-                    
                     fitness_set=[];
-
-                    %for i=1:length(new_parent_set)
                     for i=1:current_inhabitants
                         [fitness_set(i)] = cluster_update(data,current_population_assignment_set(i,:),current_population_center_set(i,:),p,n,d,q);
                     end
@@ -221,12 +206,10 @@ for iiii=1:length(N)
                             new_parent_feature_set_temp =[new_parent_feature_set_temp(1,:); new_parent_feature_set_temp];
                         end
                     end
-                    
                     % NS'in sonuçlarını en başa, en iyi set olarak
                     % koyuyoruz
                     
                     %% Neighbor Search for features
-                    
                     
                     if param_neighbor_feature_searchtype==1
                         [new_feature_set_fromNS, current_best_fitness, is_changed] =neighborsearch_feature(data,new_parent_feature_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,q);
@@ -235,9 +218,6 @@ for iiii=1:length(N)
                             new_parent_feature_set_temp =[new_feature_set_fromNS; new_parent_feature_set_temp];
                         end
                     end
-                    
-                    
-                    
                     
                     %% offspring selection
                     
@@ -269,15 +249,21 @@ for iiii=1:length(N)
                     number_of_mutations(generation_index) = mutation_count;
                     number_of_NS(generation_index) = ga_ct;
                     
-                    
                     % Eğer best fitness'a göre bir CPU time kısaltması
                     % yapmak istersek diye tutuyorum
                     %if generation_index>19 && bestfitness_set(generation_index)==bestfitness_set(generation_index-10)
                     %    keep_going=0;
                     %end
                     
+                    %% Sonuçları yazdırma
+                    
+                    if mod (generation_index,param_checkpoint_repetition) == 0   && generation_index~= param_number_of_generations
+                        checkpoint_index=checkpoint_index+1;
+                        [aaa, bbb] = min(bestfitness_set);
+                        ga_checkpoint_summary = [ga_checkpoint_summary;checkpoint_index,generation_index, aaa,bbb];
+                    end
+                    
                 end
-                
                 
                 ga_duration(ga_algorithm_repetition) = toc ;
                 %bestfitness_set(number_of_generations);
@@ -288,37 +274,40 @@ for iiii=1:length(N)
                 ga_neighborsearch(ga_algorithm_repetition) = sum(number_of_NS);
                 ga_total_mutate(ga_algorithm_repetition) = sum(number_of_mutations);
                 
-                
-                %% Sonuçları yazdırma
-                if mod (ga_algorithm_repetition,500) == 0
-                	Final = [ga_results' ga_indexes' ga_duration' ga_total_mutate' ga_neighborsearch'];
-                    table_results = array2table(Final);
-                    this_Sheet_Name = [num2str(ga_algorithm_repetition),'_',ga_Sheet_Name];
-                    writetable(table_results,ga_filename,'Sheet',this_Sheet_Name);
-                    best_of_all=min(ga_results);
-                    worst_of_all=max(ga_results);
-                    ga_summary=[ga_summary; n, p, q, orig_m, best_of_all, worst_of_all, mean(ga_results), median(ga_results),mean(ga_duration), sum(ga_results==best_of_all), sum(ga_results==worst_of_all),ga_algorithm_repetition ];
-                end
-            
-            
-                    
             end
-            
             %% Sonuçları yazdırma
             
-           % Final = [ga_results' ga_indexes' ga_duration' ga_total_mutate' ga_neighborsearch'];
-           % table_results = array2table(Final);
+            Final = [ga_results' ga_indexes' ga_duration' ga_total_mutate' ga_neighborsearch'];
+            table_results = array2table(Final);
+            writetable(table_results,ga_filename,'Sheet',ga_Sheet_Name);
             
+            best_of_all=min(ga_results);
+            worst_of_all=max(ga_results);
+            ga_summary=[ga_summary; n, p, q, orig_m, param_number_of_generations,  best_of_all, worst_of_all, mean(ga_results), median(ga_results),mean(ga_duration), sum(ga_results==best_of_all), sum(ga_results==worst_of_all)];
+            %ga_results=[];ga_indexes=[];ga_duration=[];ga_total_mutate=[];ga_neighborsearch=[];
             
-           % writetable(table_results,ga_filename,'Sheet',ga_Sheet_Name);
+            for i=1:max(ga_checkpoint_summary(:,1))
+                checkpoint_final= ga_checkpoint_summary(find(ga_checkpoint_summary(:,1)==i),:);
+                checkpoint_final_towrite = array2table(checkpoint_final);
+                this_Sheet_Name = [num2str(ga_checkpoint_summary(i,2)),'_',ga_Sheet_Name];
+                writetable(checkpoint_final_towrite,ga_filename,'Sheet',this_Sheet_Name);
+                
+                best_of_all_check=min(checkpoint_final(:,3));
+                worst_of_all_check=max(checkpoint_final(:,3));
+                
+                ga_checkpoint_towrite=[ga_checkpoint_towrite;n, p, q, orig_m, ga_checkpoint_summary(i,2),best_of_all_check,worst_of_all_check,mean(checkpoint_final(:,3)), median(checkpoint_final(:,3)),0,sum(checkpoint_final(:,3)==best_of_all_check),sum(checkpoint_final(:,3)==worst_of_all_check)];
+            end
             
-           % best_of_all=min(ga_results);
-           % worst_of_all=max(ga_results);
-           % ga_summary=[ga_summary; n, p, q, orig_m, best_of_all, worst_of_all, mean(ga_results), median(ga_results),mean(ga_duration), sum(ga_results==best_of_all), sum(ga_results==worst_of_all)];
-          ga_results=[];ga_indexes=[];ga_duration=[];ga_total_mutate=[];ga_neighborsearch=[];
+            ga_checkpoint_summary = [];
         end
     end
 end
 
 writematrix(ga_summary,ga_filename,'Sheet','SummaryOfResults');
+
+writematrix(ga_checkpoint_towrite,ga_filename,'Sheet','SummaryOfResults_Checkpoints');
+
+
+
+
 
