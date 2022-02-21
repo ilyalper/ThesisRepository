@@ -13,15 +13,15 @@ N=[80,100,200,500,1000]
 N=[100]
 
 Set_of_M = [300,500]
-Set_of_M = [300,500]
+Set_of_M = [300]
 
 %0 means no mutation, 1 means 1-type mutation, 2 means 3-type mutation
 param_mutation_type= 1;
 param_mutation_probability=0.01; %mutasyona girme olasılığını da buradan giriyoruz
 
 %0 means no NS, 1 means recursion is allowed, 2 means 2 iteration is allowed
-param_neighborsearchtype=0;
-param_number_of_neighbors=10; % kontrol edilecek olan neighbor sayısına buradan bakabiliriz.
+param_neighborsearchtype=2;
+param_number_of_neighbors=5; % kontrol edilecek olan neighbor sayısına buradan bakabiliriz.
 
 %0 means no NS_feature, 1 means yes NS_feature
 param_neighbor_feature_searchtype=0;
@@ -29,7 +29,7 @@ param_neighbor_feature_searchtype=0;
 %Her bir [m,p,q,n] seti için kaç repetition yapılacağını belirliyoruz
 ga_number_of_repetition=50;
 
-param_number_of_generations = 80;
+param_number_of_generations = 40;
 param_checkpoint_repetition = 20;
 
 %Initial population için ilk kırılımdaki oranları kümülatif olarak giriyoruz
@@ -191,19 +191,19 @@ for iiii=1:length(N)
                     ga_ct=0;% neighborsearch ile ilgili count yapmak için kullanılan parametre
                     
                     if param_neighborsearchtype==0
-                    elseif param_neighborsearchtype==1
-                        [new_center_set_fromNS, best_fit, is_changed]= neighborsearch_recursive(data,new_parent_feature_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,param_number_of_neighbors);
-                        if is_changed==1
-                            ga_ct=ga_ct+1;
-                            new_parent_center_set_temp = [new_center_set_fromNS; new_parent_center_set_temp];
-                            new_parent_feature_set_temp =[new_parent_feature_set_temp(1,:); new_parent_feature_set_temp];
-                        end
+%                     elseif param_neighborsearchtype==1
+%                         [new_center_set_fromNS, best_fit, is_changed]= neighborsearch_recursive(data,new_parent_assignment_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,param_number_of_neighbors);
+%                         if is_changed==1
+%                             ga_ct=ga_ct+1;
+%                             new_parent_center_set_temp = [new_center_set_fromNS; new_parent_center_set_temp];
+%                             new_parent_feature_set_temp =[new_parent_feature_set_temp(1,:); new_parent_feature_set_temp];
+%                         end
                     elseif param_neighborsearchtype==2
-                        [new_center_set_fromNS, best_fit, is_changed]= neighborsearch(data,new_parent_feature_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,param_number_of_neighbors);
+                        [new_center_set_fromNS, best_fit, is_changed]= neighborsearch(data,new_parent_assignment_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,d,q,param_number_of_neighbors);
                         if is_changed==1
                             ga_ct=ga_ct+1;
                             new_parent_center_set_temp = [new_center_set_fromNS; new_parent_center_set_temp];
-                            new_parent_feature_set_temp =[new_parent_feature_set_temp(1,:); new_parent_feature_set_temp];
+                            new_parent_assignment_set_temp =[new_parent_assignment_set_temp(1,:); new_parent_assignment_set_temp];
                         end
                     end
                     % NS'in sonuçlarını en başa, en iyi set olarak

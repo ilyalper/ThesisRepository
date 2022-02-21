@@ -4,7 +4,7 @@ function[fitness_value] = cluster_update (data, assignment_set,center_set,p,n,d,
 
 % manhattan distance is utilized for assignment
 
-cluster_distance=[];
+%cluster_distance=[];
 for i=1:p
     
     % ilk önce i. clusterdaki noktaları grupluyoruz
