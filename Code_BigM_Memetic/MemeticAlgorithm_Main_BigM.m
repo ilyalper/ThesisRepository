@@ -23,8 +23,10 @@ param_mutation_probability=0.01; %mutasyona girme olasılığını da buradan gi
 param_neighborsearchtype=2;
 param_number_of_neighbors=5; % kontrol edilecek olan neighbor sayısına buradan bakabiliriz.
 
-%0 means no NS_feature, 1 means yes NS_feature
-param_neighbor_feature_searchtype=0;
+%0 means no NS_assignment, 1 means yes NS_assignment
+param_neighbor_assignment_searchtype=1;
+param_number_of_neighbors_assignment=2;
+
 
 %Her bir [m,p,q,n] seti için kaç repetition yapılacağını belirliyoruz
 ga_number_of_repetition=50;
@@ -55,7 +57,7 @@ for iiii=1:length(N)
     for jjj=1:length(Set_of_M)
         orig_m=Set_of_M(jjj);
         d=orig_m;
-        for q=10:20:50
+        for q=10
             clearvars -except ga_* q p n Set_of_M d orig_m orig_M N param_*
             
             %% Data Input Start
@@ -187,7 +189,7 @@ for iiii=1:length(N)
                     new_parent_assignment_set_temp = current_population_assignment_set(index,:);
                     new_parent_center_set_temp = current_population_center_set(index,:);
                     
-                    %% Neighbor Search
+                    %% Neighbor Search for centers
                     ga_ct=0;% neighborsearch ile ilgili count yapmak için kullanılan parametre
                     
                     if param_neighborsearchtype==0
@@ -209,13 +211,13 @@ for iiii=1:length(N)
                     % NS'in sonuçlarını en başa, en iyi set olarak
                     % koyuyoruz
                     
-                    %% Neighbor Search for features
+                    %% Neighbor Search for assignment
                     
-                    if param_neighbor_feature_searchtype==1
-                        [new_feature_set_fromNS, current_best_fitness, is_changed] =neighborsearch_feature(data,new_parent_feature_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,q);
+                    if param_neighbor_assignment_searchtype==1
+                        [new_assignment_set_fromNS, current_best_fitness, is_changed] =neighborsearch_assignment(data,new_parent_assignment_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,d,q,param_number_of_neighbors_assignment);
                         if is_changed==1
                             new_parent_center_set_temp = [new_parent_center_set_temp(1,:); new_parent_center_set_temp];
-                            new_parent_feature_set_temp =[new_feature_set_fromNS; new_parent_feature_set_temp];
+                            new_parent_assignment_set_temp =[new_assignment_set_fromNS; new_parent_assignment_set_temp];
                         end
                     end
                     
