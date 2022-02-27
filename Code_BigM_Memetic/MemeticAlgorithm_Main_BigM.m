@@ -1,6 +1,7 @@
 clear all
 clc
 
+ga_index_of_the_set = 1
 % İlk olarak kullanacağımız data setini ve toplam featureların setini oluşturuyoruz
 % N or n data sayısı    % orig_M or d toplam feature sayısını % p toplam cluster sayısını
 % q her cluster'da kullanılacak olan feature sayısını
@@ -29,7 +30,7 @@ param_number_of_neighbors_assignment=2;
 
 
 %Her bir [m,p,q,n] seti için kaç repetition yapılacağını belirliyoruz
-ga_number_of_repetition=50;
+ga_number_of_repetition=10;
 
 param_number_of_generations = 40;
 param_checkpoint_repetition = 20;
@@ -193,13 +194,13 @@ for iiii=1:length(N)
                     ga_ct=0;% neighborsearch ile ilgili count yapmak için kullanılan parametre
                     
                     if param_neighborsearchtype==0
-%                     elseif param_neighborsearchtype==1
-%                         [new_center_set_fromNS, best_fit, is_changed]= neighborsearch_recursive(data,new_parent_assignment_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,param_number_of_neighbors);
-%                         if is_changed==1
-%                             ga_ct=ga_ct+1;
-%                             new_parent_center_set_temp = [new_center_set_fromNS; new_parent_center_set_temp];
-%                             new_parent_feature_set_temp =[new_parent_feature_set_temp(1,:); new_parent_feature_set_temp];
-%                         end
+                        %                     elseif param_neighborsearchtype==1
+                        %                         [new_center_set_fromNS, best_fit, is_changed]= neighborsearch_recursive(data,new_parent_assignment_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,param_number_of_neighbors);
+                        %                         if is_changed==1
+                        %                             ga_ct=ga_ct+1;
+                        %                             new_parent_center_set_temp = [new_center_set_fromNS; new_parent_center_set_temp];
+                        %                             new_parent_feature_set_temp =[new_parent_feature_set_temp(1,:); new_parent_feature_set_temp];
+                        %                         end
                     elseif param_neighborsearchtype==2
                         [new_center_set_fromNS, best_fit, is_changed]= neighborsearch(data,new_parent_assignment_set_temp(1,:),new_parent_center_set_temp(1,:),p,n,d,q,param_number_of_neighbors);
                         if is_changed==1
@@ -243,7 +244,8 @@ for iiii=1:length(N)
                     %save_parent_set (generation_index,:,:) = new_parent_set;
                     
                     %% Value saving
-                    bestfitness_set(generation_index) = ordering(1);
+                    
+                    bestfitness_set(generation_index) = cluster_update(data,new_parent_assignments_set_1(1,:),new_parent_center_set_1(1,:),p,n,d,q);
                     ga_bestfitness_values(ga_algorithm_repetition,generation_index)=min(fitness_set);
                     ga_worstfitness_values(ga_algorithm_repetition,generation_index)=max(fitness_set);
                     
@@ -257,6 +259,24 @@ for iiii=1:length(N)
                     %    keep_going=0;
                     %end
                     
+                    %burada her jenerasyondan sonra bir kontrol var, eğer
+                    %en iyi fitness'a sahipsek o denemeye ait atamaları
+                    %centerları ve seçilmiş feature'ları kaydediyoruz.
+                    
+                    if  generation_index==2
+                        best_assignments=new_parent_assignments_set_1(1,:);
+                        best_centers =new_parent_center_set_1(1,:);
+                        [best_fitness_value, best_features_selected] = feature_selection(data,best_assignments,best_centers,p,n,d,q);
+                        first_cluster_set = sum(best_assignments(1:n/2)==1);
+                        second_cluster_set = sum(best_assignments(n/2+1:n)==1);
+                    elseif generation_index>2 && bestfitness_set(generation_index) < min(bestfitness_set(1:generation_index-1))
+                        best_assignments=new_parent_assignments_set_1(1,:);
+                        best_centers =new_parent_center_set_1(1,:);
+                        [best_fitness_value, best_features_selected] = feature_selection(data,best_assignments,best_centers,p,n,d,q); 
+                        first_cluster_set = sum(best_assignments(1:n/2)==1);
+                        second_cluster_set = sum(best_assignments(n/2+1:n)==1);
+                    end
+                    
                     %% Sonuçları yazdırma
                     
                     if mod (generation_index,param_checkpoint_repetition) == 0   && generation_index~= param_number_of_generations
@@ -264,6 +284,7 @@ for iiii=1:length(N)
                         [aaa, bbb] = min(bestfitness_set);
                         ga_checkpoint_summary = [ga_checkpoint_summary;checkpoint_index,generation_index, aaa,bbb];
                     end
+                    
                     
                 end
                 
@@ -275,6 +296,19 @@ for iiii=1:length(N)
                 ga_indexes(ga_algorithm_repetition)=bb;
                 ga_neighborsearch(ga_algorithm_repetition) = sum(number_of_NS);
                 ga_total_mutate(ga_algorithm_repetition) = sum(number_of_mutations);
+                
+                
+                
+                %Saving best assignments in a cell array
+                dataset_name = ['clusters', num2str(p),'_m',num2str(d), '_n',num2str(n),'_q',num2str(q),'_trial',num2str(ga_algorithm_repetition)];
+                ga_saved_cell{ga_index_of_the_set,1}=dataset_name;
+                ga_saved_cell{ga_index_of_the_set,2}=best_fitness_value;
+                ga_saved_cell{ga_index_of_the_set,3}=best_centers;
+                ga_saved_cell{ga_index_of_the_set,4}=best_features_selected;
+                ga_saved_cell{ga_index_of_the_set,5}=best_assignments;
+                ga_saved_cell{ga_index_of_the_set,6}=first_cluster_set;
+                ga_saved_cell{ga_index_of_the_set,7}=second_cluster_set;
+                ga_index_of_the_set=ga_index_of_the_set+1;
                 
             end
             %% Sonuçları yazdırma
