@@ -17,8 +17,16 @@ N=[80,100,200,500,1000]
 %N=[80,100,200]
 N=[500]
 
-ga_clustering_control = [ones(1,N/2), 2*ones(1,N/2)];
-ga_clustering_limits = [1,N/2;N/2+1,N];
+if p==2
+    ga_clustering_control = [ones(1,N/2), 2*ones(1,N/2)];
+    ga_clustering_limits = [1,N/2;N/2+1,N];
+elseif p==4
+    ga_clustering_control = [ones(1,N/4), 2*ones(1,N/4),3*ones(1,N/4),4*ones(1,N/4)];
+    ga_clustering_limits = [1,N/4;N/4+1,N/2;N/2+1,3*N/4;3*N/4+1,N];
+end
+
+
+
 
 bestfitness_values=ones(50,100);
 %
@@ -72,7 +80,7 @@ for iiii=1:length(N)
         orig_m=Set_of_M(jjj);
         d=orig_m;
         param_q_tobe_read = 4;
-        for q=4:4
+        for q=8:8
             clearvars -except ga_* q p n Set_of_M d orig_m orig_M N param_*
             
             %% Data Input Start
@@ -298,7 +306,7 @@ for iiii=1:length(N)
                                 cluster_allocation(cluster_no,k) = sum(best_assignments(ga_clustering_limits(k,1):ga_clustering_limits(k,2))== cluster_no);
                             end
                         end
-                        total_ones = sum(best_assignments(1:n)==1); 
+                        total_ones = sum(best_assignments(1:n)==1);
                     elseif generation_index>2 && bestfitness_set(generation_index) < min(bestfitness_set(1:generation_index-1))
                         best_features=new_parent_features_set_1(1,:);
                         best_centers =new_parent_center_set_1(1,:);
@@ -308,12 +316,12 @@ for iiii=1:length(N)
                                 cluster_allocation(cluster_no,k) = sum(best_assignments(ga_clustering_limits(k,1):ga_clustering_limits(k,2))== cluster_no);
                             end
                         end
-%                         first_cluster_set_1 = sum(best_assignments(1:n/2)==1);
-%                         second_cluster_set_1 = sum(best_assignments(n/2+1:n)==1);
-%                         first_cluster_set_2 = sum(best_assignments(1:n/2)==2);
-%                         second_cluster_set_2 = sum(best_assignments(n/2+1:n)==2);
+                        %                         first_cluster_set_1 = sum(best_assignments(1:n/2)==1);
+                        %                         second_cluster_set_1 = sum(best_assignments(n/2+1:n)==1);
+                        %                         first_cluster_set_2 = sum(best_assignments(1:n/2)==2);
+                        %                         second_cluster_set_2 = sum(best_assignments(n/2+1:n)==2);
                         total_ones = sum(best_assignments(1:n)==1);
-                    end                    
+                    end
                     
                     
                     
@@ -351,8 +359,9 @@ for iiii=1:length(N)
                 ga_saved_cell{ga_index_of_the_set,9}=cluster_allocation(2,1);
                 ga_saved_cell{ga_index_of_the_set,10}=cluster_allocation(2,2);
                 ga_saved_cell{ga_index_of_the_set,11}=total_ones;
+                ga_saved_cell{ga_index_of_the_set,12}=cluster_allocation;
                 ga_index_of_the_set=ga_index_of_the_set+1;
-              
+                
                 
             end
             

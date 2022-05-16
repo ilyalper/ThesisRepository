@@ -60,7 +60,9 @@ while kk < init_end+1
     uniqueness_test=1;
     for i=1:kk-1
         
-        if sum((parent_features(i,:)==p1))==d*p && sum(parent_centers(i,:)==cluster_centers)==p
+        if d==q
+            %do nothing just choose all features
+        elseif sum((parent_features(i,:)==p1))==d*p && sum(parent_centers(i,:)==cluster_centers)==p
             uniqueness_test=0;
             init_rand_infeasibility_count=init_rand_infeasibility_count+1;
         elseif length(unique(cluster_centers)) ~= length(cluster_centers)
